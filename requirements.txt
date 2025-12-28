@@ -8,8 +8,9 @@
 # For OpenCV: On macOS, you may need: brew install opencv
 # For TensorFlow (used by DeepFace): pip install tensorflow (CPU version)
 
-Flask==3.0.0
-flask-cors==4.0.0
+# Let DeepFace choose compatible Flask / flask-cors versions
+Flask>=2.0,<4.0
+flask-cors>=4.0.1
 opencv-python==4.8.1.78
 deepface>=0.0.79
 mediapipe>=0.10.30
