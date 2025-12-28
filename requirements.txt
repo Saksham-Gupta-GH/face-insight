@@ -1,0 +1,28 @@
+# Face Insight - AI Face Analyzer
+# Python Dependencies
+#
+# Installation:
+# pip install -r requirements.txt
+#
+# Note: Some packages may require additional system dependencies.
+# For OpenCV: On macOS, you may need: brew install opencv
+# For TensorFlow (used by DeepFace): pip install tensorflow (CPU version)
+
+Flask==3.0.0
+flask-cors==4.0.0
+opencv-python==4.8.1.78
+deepface>=0.0.79
+mediapipe==0.10.21
+numpy>=1.26.0
+Pillow==10.1.0
+Werkzeug==3.0.1
+tensorflow>=2.16.0
+tf-keras>=2.16.0
+gunicorn>=21.2.0
+
+# Optional: For better performance (if you have GPU)
+# tensorflow-gpu==2.13.0  # Uncomment if you have CUDA GPU
+
+# Note: DeepFace will automatically download pre-trained models on first use.
+# This may take a few minutes and require internet connection.
+

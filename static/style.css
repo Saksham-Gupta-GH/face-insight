@@ -1,0 +1,450 @@
+/* 
+Face Insight - AI Face Analyzer
+Angry Birds Style Graphics
+*/
+
+/* Reset and Base Styles */
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+    background: #000000;
+    min-height: 100vh;
+    padding: 20px;
+    color: #000;
+    line-height: 1.6;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    background: purple;
+    border: 5px solid #000;
+    border-radius: 20px;
+    padding: 40px;
+    margin-top: 20px;
+    margin-bottom: 20px;
+    box-shadow: 0 8px 0 #000;
+}
+
+/* Header Styles */
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding-bottom: 20px;
+    border-bottom: 4px solid #000;
+}
+
+header h1 {
+    font-size: 3em;
+    color: #FF0000;
+    margin-bottom: 15px;
+    font-weight: 900;
+    letter-spacing: -1px;
+}
+
+.subtitle {
+    font-size: 1.2em;
+    color: #000;
+    font-weight: 700;
+}
+
+/* Upload Section */
+.upload-section {
+    margin-bottom: 30px;
+}
+
+.upload-box {
+    border: 5px solid #000;
+    border-radius: 15px;
+    padding: 60px 20px;
+    text-align: center;
+    cursor: pointer;
+    background: #FFD700;
+    box-shadow: 0 6px 0 #000;
+    transition: all 0.1s;
+}
+
+.upload-box:hover {
+    background: #FFC700;
+    transform: translateY(2px);
+    box-shadow: 0 4px 0 #000;
+}
+
+.upload-box.dragover {
+    background: #FF6B6B;
+    border-color: #FF0000;
+    box-shadow: 0 6px 0 #FF0000;
+}
+
+.upload-content svg {
+    color: #FF6B6B;
+    margin-bottom: 20px;
+}
+
+.upload-text {
+    font-size: 1.3em;
+    font-weight: 700;
+    color: #000;
+    margin-bottom: 10px;
+}
+
+.upload-hint {
+    font-size: 1em;
+    color: #666;
+    font-weight: 500;
+}
+
+/* Quality Recommendation */
+.quality-recommendation {
+    text-align: center;
+    margin-top: 20px;
+    padding: 15px 20px;
+    background: #0066FF;
+    border: 4px solid #000;
+    border-radius: 12px;
+    box-shadow: 0 5px 0 #000;
+}
+
+.quality-recommendation p {
+    color: #FFFFFF;
+    font-size: 0.95em;
+    font-weight: 700;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.quality-recommendation strong {
+    color: #FFD700;
+}
+
+/* Loading Indicator */
+.loading {
+    text-align: center;
+    padding: 40px;
+    background: #FFFFFF;
+    border: 5px solid #000;
+    border-radius: 15px;
+    margin: 30px 0;
+    box-shadow: 0 6px 0 #000;
+}
+
+.spinner {
+    border: 5px solid #000;
+    border-top: 5px solid #FF6B6B;
+    border-left: 5px solid #FF6B6B;
+    border-radius: 50%;
+    width: 50px;
+    height: 50px;
+    animation: spin 0.8s linear infinite;
+    margin: 0 auto 20px;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
+.loading p {
+    color: #000;
+    font-size: 1.1em;
+    font-weight: 700;
+}
+
+/* Error Message */
+.error-message {
+    background: #FF6B6B;
+    border: 5px solid #000;
+    border-radius: 15px;
+    padding: 20px;
+    margin: 20px 0;
+    color: #FFFFFF;
+    text-align: center;
+    font-weight: 700;
+    font-size: 1.1em;
+    box-shadow: 0 6px 0 #000;
+}
+
+/* Results Section */
+.results-section {
+    margin-top: 40px;
+}
+
+.results-section h2 {
+    color: #0066FF;
+    margin-bottom: 30px;
+    text-align: center;
+    font-size: 2.5em;
+    font-weight: 900;
+    letter-spacing: -1px;
+}
+
+/* Try Again Button */
+.try-again-container {
+    text-align: center;
+    margin: 25px 0 35px 0;
+}
+
+.try-again-btn {
+    background: #00FF00;
+    color: #000;
+    border: 5px solid #000;
+    border-radius: 15px;
+    padding: 15px 40px;
+    font-size: 1.1em;
+    font-weight: 900;
+    cursor: pointer;
+    box-shadow: 0 6px 0 #000;
+    transition: all 0.1s;
+    letter-spacing: 0.5px;
+}
+
+.try-again-btn:hover {
+    background: #00FF66;
+    transform: translateY(2px);
+    box-shadow: 0 4px 0 #000;
+}
+
+.try-again-btn:active {
+    transform: translateY(4px);
+    box-shadow: 0 2px 0 #000;
+}
+
+.image-container {
+    text-align: center;
+    margin-bottom: 30px;
+    background: #FFD700;
+    padding: 25px;
+    border: 5px solid #000;
+    border-radius: 15px;
+    box-shadow: 0 6px 0 #000;
+}
+
+#resultCanvas {
+    max-width: 100%;
+    height: auto;
+    border: 4px solid #000;
+    border-radius: 10px;
+    box-shadow: 0 4px 0 #000;
+}
+
+/* Face Cards */
+.faces-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+    margin-top: 30px;
+}
+
+.face-card {
+    background: #FF6B6B;
+    border: 5px solid #000;
+    border-radius: 20px;
+    padding: 30px;
+    color: #FFD700;
+    box-shadow: 0 8px 0 #000;
+    position: relative;
+}
+
+.face-card h3 {
+    margin-bottom: 20px;
+    font-size: 1.6em;
+    border-bottom: 4px solid #000;
+    padding-bottom: 15px;
+    font-weight: 900;
+    color: #FFD700;
+}
+
+.analysis-item {
+    margin-bottom: 18px;
+    padding: 18px;
+    background: rgba(0, 0, 0, 0.2);
+    border: 3px solid #000;
+    border-radius: 12px;
+    box-shadow: 0 3px 0 #000;
+}
+
+.analysis-item label {
+    display: block;
+    font-weight: 700;
+    margin-bottom: 8px;
+    font-size: 0.95em;
+    color: #FFD700;
+}
+
+.analysis-item .value {
+    font-size: 1.4em;
+    font-weight: 900;
+    color: #FFFFFF;
+}
+
+.analysis-item .confidence {
+    font-size: 0.9em;
+    color: #FFE5E5;
+    margin-top: 5px;
+    font-weight: 600;
+}
+
+.symmetry-bar {
+    width: 100%;
+    height: 35px;
+    background: #000;
+    border: 4px solid #000;
+    border-radius: 18px;
+    margin-top: 12px;
+    overflow: hidden;
+    position: relative;
+    box-shadow: inset 0 3px 0 #333;
+}
+
+.symmetry-fill {
+    height: 100%;
+    background: #00FF00;
+    border-radius: 15px;
+    transition: width 0.4s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: #000;
+    font-weight: 900;
+    font-size: 0.95em;
+    box-shadow: 0 3px 0 #00CC00;
+    position: relative;
+}
+
+.symmetry-explanation {
+    margin-top: 10px;
+    font-size: 0.9em;
+    color: #FFD700;
+    font-weight: 600;
+}
+
+/* Info Section */
+.info-section {
+    margin-top: 50px;
+    padding-top: 30px;
+    border-top: 5px solid #000;
+}
+
+.info-section h3 {
+    text-align: center;
+    color: #0066FF;
+    margin-bottom: 30px;
+    font-size: 2em;
+    font-weight: 900;
+    letter-spacing: -1px;
+}
+
+.features-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 25px;
+}
+
+.feature-card {
+    text-align: center;
+    padding: 30px;
+    background: #FFD700;
+    border: 5px solid #000;
+    border-radius: 20px;
+    box-shadow: 0 6px 0 #000;
+    transition: all 0.1s;
+}
+
+.feature-card:hover {
+    transform: translateY(2px);
+    box-shadow: 0 4px 0 #000;
+}
+
+.feature-icon {
+    font-size: 3em;
+    margin-bottom: 15px;
+}
+
+.feature-card h4 {
+    color: #0066FF;
+    margin-bottom: 10px;
+    font-size: 1.3em;
+    font-weight: 900;
+}
+
+.feature-card p {
+    color: #000;
+    font-size: 1em;
+    font-weight: 600;
+}
+
+/* Responsive Design */
+@media (max-width: 768px) {
+    .container {
+        padding: 25px;
+        border-width: 4px;
+        border-radius: 15px;
+    }
+
+    header h1 {
+        font-size: 2em;
+    }
+
+    .subtitle {
+        font-size: 1em;
+    }
+
+    .upload-box {
+        padding: 40px 15px;
+        border-width: 4px;
+        border-radius: 12px;
+    }
+
+    .upload-text {
+        font-size: 1.1em;
+    }
+
+    .faces-container {
+        grid-template-columns: 1fr;
+    }
+
+    .features-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .try-again-btn {
+        width: 100%;
+        max-width: 300px;
+        font-size: 1em;
+        padding: 12px 30px;
+    }
+
+    .results-section h2 {
+        font-size: 2em;
+    }
+
+    .face-card {
+        border-width: 4px;
+        border-radius: 15px;
+    }
+}
+
+@media (max-width: 480px) {
+    body {
+        padding: 10px;
+    }
+
+    .container {
+        padding: 20px;
+        border-width: 3px;
+    }
+
+    header h1 {
+        font-size: 1.6em;
+    }
+
+    .try-again-btn {
+        font-size: 0.9em;
+        padding: 12px 25px;
+    }
+}

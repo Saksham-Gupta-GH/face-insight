@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Face Insight - AI Face Analyzer</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <h1>🎭 Face Insight</h1>
+            <p class="subtitle">AI-Powered Face Analyzer</p>
+        </header>
+
+        <!-- Upload Section -->
+        <div class="upload-section">
+            <div class="upload-box" id="uploadBox">
+                <input type="file" id="imageInput" accept="image/*" hidden>
+                <div class="upload-content">
+                    <svg width="64" height="64" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="17 8 12 3 7 8"></polyline>
+                        <line x1="12" y1="3" x2="12" y2="15"></line>
+                    </svg>
+                    <p class="upload-text">Click to upload or drag and drop</p>
+                    <p class="upload-hint">PNG, JPG, JPEG up to 16MB</p>
+                </div>
+            </div>
+            <div class="quality-recommendation">
+                <p><strong>Tip:</strong> For better results, use high-quality images with clear, well-lit faces</p>
+            </div>
+        </div>
+
+        <!-- Loading Indicator -->
+        <div class="loading" id="loading" style="display: none;">
+            <div class="spinner"></div>
+            <p>Analyzing face... Please wait</p>
+        </div>
+
+        <!-- Error Message -->
+        <div class="error-message" id="errorMessage" style="display: none;"></div>
+
+        <!-- Results Section -->
+        <div class="results-section" id="resultsSection" style="display: none;">
+            <h2>Analysis Results</h2>
+            
+            <!-- Try Again Button -->
+            <div class="try-again-container">
+                <button class="try-again-btn" id="tryAgainBtn" onclick="tryAgain()">
+                    <span>🔄 Try Another Image</span>
+                </button>
+            </div>
+            
+            <!-- Image Display -->
+            <div class="image-container">
+                <canvas id="resultCanvas"></canvas>
+            </div>
+
+            <!-- Face Analysis Cards -->
+            <div class="faces-container" id="facesContainer"></div>
+        </div>
+
+        <!-- Info Section -->
+        <div class="info-section">
+            <h3>What can Face Insight analyze?</h3>
+            <div class="features-grid">
+                <div class="feature-card">
+                    <div class="feature-icon">👤</div>
+                    <h4>Age Estimation</h4>
+                    <p>Approximate age detection</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚧️</div>
+                    <h4>Gender Detection</h4>
+                    <p>Gender classification</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">😊</div>
+                    <h4>Emotion Recognition</h4>
+                    <p>Detects happiness, sadness, anger, surprise, and more</p>
+                </div>
+                <div class="feature-card">
+                    <div class="feature-icon">⚖️</div>
+                    <h4>Facial Symmetry</h4>
+                    <p>Calculates facial symmetry percentage</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="{{ url_for('static', filename='script.js') }}"></script>
+</body>
+</html>
+
