@@ -13,7 +13,9 @@ flask-cors==4.0.0
 opencv-python==4.8.1.78
 deepface>=0.0.79
 mediapipe>=0.10.30
-numpy>=1.26.0
+# Pin NumPy < 2 because some binary dependencies (e.g., OpenCV) are built against NumPy 1.x
+# and fail to import with NumPy 2.x on Render.
+numpy>=1.26.0,<2.0.0
 Pillow>=10.2.0
 Werkzeug==3.0.1
 tensorflow>=2.16.0
