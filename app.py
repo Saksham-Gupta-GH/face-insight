@@ -305,7 +305,7 @@ def analyze_face():
         # Process each detected face
         results = []
         height, width = image.shape[:2]
-        
+
         mp_results = None
         # Initialize MediaPipe face mesh for landmarks, if available
         if mp_face_mesh is not None and hasattr(mp_face_mesh, "FaceMesh"):
@@ -313,97 +313,108 @@ def analyze_face():
                 static_image_mode=True,
                 max_num_faces=len(face_boxes),
                 refine_landmarks=True,
-                min_detection_confidence=0.5
+                min_detection_confidence=0.5,
             ) as face_mesh:
                 # Convert BGR to RGB for MediaPipe
                 rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
                 mp_results = face_mesh.process(rgb_image)
-        
+
         # Process each detected face
         for idx, face_box in enumerate(face_boxes):
             try:
-                    # Extract face region for DeepFace analysis
-                    x, y, w, h = face_box['x'], face_box['y'], face_box['width'], face_box['height']
-                    
-                    # Add padding to face region
-                    padding = 20
-                    x_start = max(0, x - padding)
-                    y_start = max(0, y - padding)
-                    x_end = min(width, x + w + padding)
-                    y_end = min(height, y + h + padding)
-                    
-                    face_region = image[y_start:y_end, x_start:x_end]
-                    
-                    # Save face region temporarily for DeepFace
-                    face_path = os.path.join(app.config['UPLOAD_FOLDER'], f'face_{idx}_{filename}')
-                    cv2.imwrite(face_path, face_region)
-                    
-                    # Analyze with DeepFace (age, gender, emotion)
-                    try:
-                        deepface_result = DeepFace.analyze(
-                            face_path,
-                            actions=['age', 'gender', 'emotion'],
-                            enforce_detection=False,
-                            silent=True
-                        )
-                        
-                        # Handle both single dict and list responses from DeepFace
-                        if isinstance(deepface_result, list):
-                            analysis = deepface_result[0]
-                        else:
-                            analysis = deepface_result
-                        
-                        age = int(analysis.get('age', 0))
-                        gender = analysis.get('dominant_gender', 'Unknown')
-                        emotion = analysis.get('dominant_emotion', 'Unknown')
-                        
-                        # Get confidence scores
-                        emotion_scores = analysis.get('emotion', {})
-                        gender_scores = analysis.get('gender', {})
-                        
-                        emotion_confidence = round(emotion_scores.get(emotion, 0), 2) if emotion_scores else 0
-                        gender_confidence = round(gender_scores.get(gender, 0), 2) if gender_scores else 0
-                        
-                    except Exception as e:
-                        print(f"DeepFace analysis error: {str(e)}")
-                        age = 0
-                        gender = "Unknown"
-                        emotion = "Unknown"
-                        emotion_confidence = 0
-                        gender_confidence = 0
-                    
-                    # Calculate facial symmetry using MediaPipe landmarks
-                    symmetry = 0.0
-                    if (
-                        mp_results is not None
-                        and getattr(mp_results, "multi_face_landmarks", None)
-                        and idx < len(mp_results.multi_face_landmarks)
-                    ):
-                        landmarks = mp_results.multi_face_landmarks[idx]
-                        symmetry = calculate_facial_symmetry(landmarks, width, height)
-                    
-                    # Clean up temporary face file
-                    if os.path.exists(face_path):
-                        os.remove(face_path)
-                    
-                    # Prepare result for this face
-                    result = {
-                        'bounding_box': face_box,
-                        'age': age,
-                        'gender': gender,
-                        'emotion': emotion,
-                        'symmetry': symmetry,
-                        'confidence': {
-                            'emotion': emotion_confidence,
-                            'gender': gender_confidence
-                        }
-                    }
-                    
-                    results.append(result)
-                    
+                # Extract face region for DeepFace analysis
+                x, y, w, h = (
+                    face_box['x'],
+                    face_box['y'],
+                    face_box['width'],
+                    face_box['height'],
+                )
+
+                # Add padding to face region
+                padding = 20
+                x_start = max(0, x - padding)
+                y_start = max(0, y - padding)
+                x_end = min(width, x + w + padding)
+                y_end = min(height, y + h + padding)
+
+                face_region = image[y_start:y_end, x_start:x_end]
+
+                # Save face region temporarily for DeepFace
+                face_path = os.path.join(
+                    app.config['UPLOAD_FOLDER'], f"face_{idx}_{filename}"
+                )
+                cv2.imwrite(face_path, face_region)
+
+                # Analyze with DeepFace (age, gender, emotion)
+                try:
+                    deepface_result = DeepFace.analyze(
+                        face_path,
+                        actions=['age', 'gender', 'emotion'],
+                        enforce_detection=False,
+                        silent=True,
+                    )
+
+                    # Handle both single dict and list responses from DeepFace
+                    if isinstance(deepface_result, list):
+                        analysis = deepface_result[0]
+                    else:
+                        analysis = deepface_result
+
+                    age = int(analysis.get('age', 0))
+                    gender = analysis.get('dominant_gender', 'Unknown')
+                    emotion = analysis.get('dominant_emotion', 'Unknown')
+
+                    # Get confidence scores
+                    emotion_scores = analysis.get('emotion', {})
+                    gender_scores = analysis.get('gender', {})
+
+                    emotion_confidence = (
+                        round(emotion_scores.get(emotion, 0), 2) if emotion_scores else 0
+                    )
+                    gender_confidence = (
+                        round(gender_scores.get(gender, 0), 2) if gender_scores else 0
+                    )
+
                 except Exception as e:
-                    print(f"Error processing face {idx}: {str(e)}")
-                    continue
+                    print(f"DeepFace analysis error: {str(e)}")
+                    age = 0
+                    gender = "Unknown"
+                    emotion = "Unknown"
+                    emotion_confidence = 0
+                    gender_confidence = 0
+
+                # Calculate facial symmetry using MediaPipe landmarks
+                symmetry = 0.0
+                if (
+                    mp_results is not None
+                    and getattr(mp_results, "multi_face_landmarks", None)
+                    and idx < len(mp_results.multi_face_landmarks)
+                ):
+                    landmarks = mp_results.multi_face_landmarks[idx]
+                    symmetry = calculate_facial_symmetry(landmarks, width, height)
+
+                # Clean up temporary face file
+                if os.path.exists(face_path):
+                    os.remove(face_path)
+
+                # Prepare result for this face
+                result = {
+                    'bounding_box': face_box,
+                    'age': age,
+                    'gender': gender,
+                    'emotion': emotion,
+                    'symmetry': symmetry,
+                    'confidence': {
+                        'emotion': emotion_confidence,
+                        'gender': gender_confidence,
+                    },
+                }
+
+                results.append(result)
+
+            except Exception as e:
+                print(f"Error processing face {idx}: {str(e)}")
+                continue
         
         # Clean up uploaded file
         if os.path.exists(filepath):
