@@ -96,20 +96,21 @@ from werkzeug.utils import secure_filename
 # top-level attribute by default. The project code expects to use
 # `mp.solutions.face_detection` and `mp.solutions.face_mesh`, so we try to
 # import the `solutions` submodule explicitly and attach it to `mp` if
-# necessary.
+# necessary. If this is not available, we gracefully disable symmetry
+# calculations instead of crashing the whole app.
 try:
-    from mediapipe import solutions as mp_solutions
+    from mediapipe import solutions as mp_solutions  # type: ignore[attr-defined]
 except ImportError:
     mp_solutions = getattr(mp, "solutions", None)
 
 if mp_solutions is None:
-    raise RuntimeError(
-        "MediaPipe 'solutions' API is not available. Install a compatible "
-        "mediapipe version that provides legacy solutions."
+    print(
+        "Warning: MediaPipe 'solutions' API is not available. "
+        "Facial symmetry calculations will be disabled."
     )
 
-# Expose solutions on the mp namespace for backward compatibility
-if not hasattr(mp, "solutions"):
+# Expose solutions on the mp namespace for backward compatibility when present
+if mp_solutions is not None and not hasattr(mp, "solutions"):
     mp.solutions = mp_solutions  # type: ignore[attr-defined]
 
 app = Flask(__name__)
@@ -124,10 +125,15 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 # Create uploads directory if it doesn't exist
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Initialize MediaPipe face detection and landmarks
-mp_face_detection = mp_solutions.face_detection
-mp_face_mesh = mp_solutions.face_mesh
-mp_drawing = mp_solutions.drawing_utils
+# Initialize MediaPipe face detection and landmarks (may be None if unavailable)
+if mp_solutions is not None:
+    mp_face_detection = mp_solutions.face_detection
+    mp_face_mesh = mp_solutions.face_mesh
+    mp_drawing = mp_solutions.drawing_utils
+else:
+    mp_face_detection = None
+    mp_face_mesh = None
+    mp_drawing = None
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
@@ -300,21 +306,22 @@ def analyze_face():
         results = []
         height, width = image.shape[:2]
         
-        # Initialize MediaPipe face mesh for landmarks
-        with mp_face_mesh.FaceMesh(
-            static_image_mode=True,
-            max_num_faces=len(face_boxes),
-            refine_landmarks=True,
-            min_detection_confidence=0.5
-        ) as face_mesh:
-            
-            # Convert BGR to RGB for MediaPipe
-            rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
-            mp_results = face_mesh.process(rgb_image)
-            
-            # Process each detected face
-            for idx, face_box in enumerate(face_boxes):
-                try:
+        mp_results = None
+        # Initialize MediaPipe face mesh for landmarks, if available
+        if mp_face_mesh is not None and hasattr(mp_face_mesh, "FaceMesh"):
+            with mp_face_mesh.FaceMesh(
+                static_image_mode=True,
+                max_num_faces=len(face_boxes),
+                refine_landmarks=True,
+                min_detection_confidence=0.5
+            ) as face_mesh:
+                # Convert BGR to RGB for MediaPipe
+                rgb_image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+                mp_results = face_mesh.process(rgb_image)
+        
+        # Process each detected face
+        for idx, face_box in enumerate(face_boxes):
+            try:
                     # Extract face region for DeepFace analysis
                     x, y, w, h = face_box['x'], face_box['y'], face_box['width'], face_box['height']
                     
@@ -367,7 +374,11 @@ def analyze_face():
                     
                     # Calculate facial symmetry using MediaPipe landmarks
                     symmetry = 0.0
-                    if mp_results.multi_face_landmarks and idx < len(mp_results.multi_face_landmarks):
+                    if (
+                        mp_results is not None
+                        and getattr(mp_results, "multi_face_landmarks", None)
+                        and idx < len(mp_results.multi_face_landmarks)
+                    ):
                         landmarks = mp_results.multi_face_landmarks[idx]
                         symmetry = calculate_facial_symmetry(landmarks, width, height)
                     
