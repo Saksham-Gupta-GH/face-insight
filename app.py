@@ -221,27 +221,38 @@ def calculate_facial_symmetry(landmarks, image_width, image_height):
 def detect_faces_opencv(image_path):
     """
     Detect faces using OpenCV's Haar Cascade classifier.
-    Returns bounding boxes for all detected faces.
+    Returns bounding boxes and the (possibly resized) image.
     """
     # Load the image
     image = cv2.imread(image_path)
     if image is None:
-        return []
-    
+        return [], None
+
+    # Downscale very large images to reduce memory usage
+    h, w = image.shape[:2]
+    max_dim = 1024
+    if max(h, w) > max_dim:
+        scale = max_dim / float(max(h, w))
+        new_w = int(w * scale)
+        new_h = int(h * scale)
+        image = cv2.resize(image, (new_w, new_h), interpolation=cv2.INTER_AREA)
+
     # Convert to grayscale for face detection
     gray = cv2.cvtColor(image, cv2.COLOR_BGR2GRAY)
-    
+
     # Load the pre-trained face detection model
-    face_cascade = cv2.CascadeClassifier(cv2.data.haarcascades + 'haarcascade_frontalface_default.xml')
-    
+    face_cascade = cv2.CascadeClassifier(
+        cv2.data.haarcascades + 'haarcascade_frontalface_default.xml'
+    )
+
     # Detect faces
     faces = face_cascade.detectMultiScale(
         gray,
         scaleFactor=1.1,
         minNeighbors=5,
-        minSize=(30, 30)
+        minSize=(30, 30),
     )
-    
+
     # Convert to list of dictionaries with bounding box info
     face_boxes = []
     for (x, y, w, h) in faces:
@@ -249,9 +260,9 @@ def detect_faces_opencv(image_path):
             'x': int(x),
             'y': int(y),
             'width': int(w),
-            'height': int(h)
+            'height': int(h),
         })
-    
+
     return face_boxes, image
 
 @app.route('/')
@@ -339,18 +350,24 @@ def analyze_face():
 
                 face_region = image[y_start:y_end, x_start:x_end]
 
-                # Save face region temporarily for DeepFace
-                face_path = os.path.join(
-                    app.config['UPLOAD_FOLDER'], f"face_{idx}_{filename}"
-                )
-                cv2.imwrite(face_path, face_region)
+                # Downscale face region to reduce memory footprint for analysis
+                fh, fw = face_region.shape[:2]
+                if max(fh, fw) > 512:
+                    scale = 512.0 / float(max(fh, fw))
+                    face_region = cv2.resize(
+                        face_region,
+                        (int(fw * scale), int(fh * scale)),
+                        interpolation=cv2.INTER_AREA,
+                    )
 
-                # Analyze with DeepFace (age, gender, emotion)
+                # Analyze with DeepFace (age, gender, emotion) directly from array
                 try:
                     deepface_result = DeepFace.analyze(
-                        face_path,
+                        img_path=face_region,
                         actions=['age', 'gender', 'emotion'],
                         enforce_detection=False,
+                        detector_backend='opencv',
+                        progbar=False,
                         silent=True,
                     )
 
@@ -392,10 +409,6 @@ def analyze_face():
                 ):
                     landmarks = mp_results.multi_face_landmarks[idx]
                     symmetry = calculate_facial_symmetry(landmarks, width, height)
-
-                # Clean up temporary face file
-                if os.path.exists(face_path):
-                    os.remove(face_path)
 
                 # Prepare result for this face
                 result = {
