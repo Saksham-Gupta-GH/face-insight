@@ -89,6 +89,29 @@ import os
 import base64
 from werkzeug.utils import secure_filename
 
+# ---------------------------------------------------------------------------
+# MediaPipe compatibility shim
+# ---------------------------------------------------------------------------
+# Newer versions of MediaPipe (0.10.x+) may not expose `mp.solutions` as a
+# top-level attribute by default. The project code expects to use
+# `mp.solutions.face_detection` and `mp.solutions.face_mesh`, so we try to
+# import the `solutions` submodule explicitly and attach it to `mp` if
+# necessary.
+try:
+    from mediapipe import solutions as mp_solutions
+except ImportError:
+    mp_solutions = getattr(mp, "solutions", None)
+
+if mp_solutions is None:
+    raise RuntimeError(
+        "MediaPipe 'solutions' API is not available. Install a compatible "
+        "mediapipe version that provides legacy solutions."
+    )
+
+# Expose solutions on the mp namespace for backward compatibility
+if not hasattr(mp, "solutions"):
+    mp.solutions = mp_solutions  # type: ignore[attr-defined]
+
 app = Flask(__name__)
 CORS(app)  # Enable CORS for cross-origin requests
 
@@ -102,9 +125,9 @@ app.config['MAX_CONTENT_LENGTH'] = 16 * 1024 * 1024  # 16MB max file size
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
 # Initialize MediaPipe face detection and landmarks
-mp_face_detection = mp.solutions.face_detection
-mp_face_mesh = mp.solutions.face_mesh
-mp_drawing = mp.solutions.drawing_utils
+mp_face_detection = mp_solutions.face_detection
+mp_face_mesh = mp_solutions.face_mesh
+mp_drawing = mp_solutions.drawing_utils
 
 def allowed_file(filename):
     """Check if file extension is allowed"""
